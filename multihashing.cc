@@ -23,14 +23,18 @@ using namespace Nan;
 NAN_METHOD(cryptonight) {
 
     bool fast = false;
+    uint32_t cn_variant = 0;
 
     if (info.Length() < 1)
         return THROW_ERROR_EXCEPTION("You must provide one argument.");
     
     if (info.Length() >= 2) {
-        if(!info[1]->IsBoolean())
-            return THROW_ERROR_EXCEPTION("Argument 2 should be a boolean");
-        fast = info[1]->ToBoolean()->BooleanValue();
+        if(info[1]->IsBoolean())
+            fast = info[1]->ToBoolean()->BooleanValue();
+       else if(info[1]->IsUint32())
+            cn_variant = info[1]->ToUint32()->Uint32Value();
+       else
+            return except("Argument 2 should be a boolean or uint32_t");
     }
 
     Local<Object> target = info[0]->ToObject();
@@ -45,8 +49,11 @@ NAN_METHOD(cryptonight) {
 
     if(fast)
         cryptonight_fast_hash(input, output, input_len);
-    else
-        cryptonight_hash(input, output, input_len);
+        else {
+            if (cn_variant > 0 && input_len < 43)
+             return except("Argument must be 43 bytes for monero variant 1+");
+             cryptonight_hash(input, output, input_len, cn_variant);
+        }
 
     v8::Local<v8::Value> returnValue = Nan::CopyBuffer(output, 32).ToLocalChecked();
     info.GetReturnValue().Set(
@@ -134,40 +141,6 @@ NAN_METHOD(CNLAsync) {
     uint32_t input_len = Buffer::Length(target);
 
     Nan::AsyncQueueWorker(new CNLAsyncWorker(callback, input, input_len));
-}
-
-NAN_METHOD(cryptonight_light) {
-
-    bool fast = false;
-
-    if (info.Length() < 1)
-        return THROW_ERROR_EXCEPTION("You must provide one argument.");
-
-    if (info.Length() >= 2) {
-        if(!info[1]->IsBoolean())
-            return THROW_ERROR_EXCEPTION("Argument 2 should be a boolean");
-        fast = info[1]->ToBoolean()->BooleanValue();
-    }
-
-    Local<Object> target = info[0]->ToObject();
-
-    if(!Buffer::HasInstance(target))
-        return THROW_ERROR_EXCEPTION("Argument should be a buffer object.");
-
-    char * input = Buffer::Data(target);
-    char output[32];
-
-    uint32_t input_len = Buffer::Length(target);
-
-    if(fast)
-        cryptonight_light_fast_hash(input, output, input_len);
-    else
-        cryptonight_light_hash(input, output, input_len);
-
-    v8::Local<v8::Value> returnValue = Nan::CopyBuffer(output, 32).ToLocalChecked();
-    info.GetReturnValue().Set(
-        returnValue
-    );
 }
 
 
