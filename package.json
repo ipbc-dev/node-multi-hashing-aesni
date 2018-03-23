@@ -1,6 +1,6 @@
 {
     "name": "multi-hashing",
-    "version": "0.0.10",
+    "version": "0.0.11c",
     "main": "multihashing",
     "author": {
         "name": "Multiple",
@@ -8,7 +8,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/snipa22/node-multi-hashing-aesni.git"
+        "url": "https://github.com/camthegeek/node-multi-hashing-aesni.git"
     },
     "dependencies" : {
         "bindings" : "*",
