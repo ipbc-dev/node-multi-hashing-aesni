@@ -1,6 +1,6 @@
 {
     "name": "multi-hashing",
-    "version": "0.0.11c",
+    "version": "0.0.10",
     "main": "multihashing",
     "author": {
         "name": "Multiple",
