@@ -34,7 +34,7 @@ NAN_METHOD(cryptonight) {
        else if(info[1]->IsUint32())
             cn_variant = info[1]->ToUint32()->Uint32Value();
        else
-            return except("Argument 2 should be a boolean or uint32_t");
+            return THROW_ERROR_EXCEPTION("Argument 2 should be a boolean or uint32_t");
     }
 
     Local<Object> target = info[0]->ToObject();
@@ -51,7 +51,7 @@ NAN_METHOD(cryptonight) {
         cryptonight_fast_hash(input, output, input_len);
         else {
             if (cn_variant > 0 && input_len < 43)
-             return except("Argument must be 43 bytes for monero variant 1+");
+             return THROW_ERROR_EXCEPTION("Argument must be 43 bytes for monero variant 1+");
              cryptonight_hash(input, output, input_len, cn_variant);
         }
 
@@ -68,7 +68,8 @@ class CNAsyncWorker : public Nan::AsyncWorker{
         ~CNAsyncWorker() {}
 
     void Execute () {
-        cryptonight_hash(input, output, input_len);
+        uint32_t cn_variant = 0;
+        cryptonight_hash(input, output, input_len, cn_variant);
       }
 
     void HandleOKCallback () {
@@ -109,7 +110,8 @@ class CNLAsyncWorker : public Nan::AsyncWorker{
         ~CNLAsyncWorker() {}
 
     void Execute () {
-        cryptonight_light_hash(input, output, input_len);
+        uint32_t cn_variant = 0;
+        cryptonight_light_hash(input, output, input_len,cn_variant);
       }
 
     void HandleOKCallback () {
@@ -141,6 +143,47 @@ NAN_METHOD(CNLAsync) {
     uint32_t input_len = Buffer::Length(target);
 
     Nan::AsyncQueueWorker(new CNLAsyncWorker(callback, input, input_len));
+}
+
+NAN_METHOD(cryptonight_light) {
+
+    bool fast = false;
+    uint32_t cn_variant = 0;
+
+    if (info.Length() < 1)
+        return THROW_ERROR_EXCEPTION("You must provide one argument.");
+    
+    if (info.Length() >= 2) {
+        if(info[1]->IsBoolean())
+            fast = info[1]->ToBoolean()->BooleanValue();
+       else if(info[1]->IsUint32())
+            cn_variant = info[1]->ToUint32()->Uint32Value();
+       else
+            return THROW_ERROR_EXCEPTION("Argument 2 should be a boolean or uint32_t");
+    }
+
+    Local<Object> target = info[0]->ToObject();
+
+    if(!Buffer::HasInstance(target))
+        return THROW_ERROR_EXCEPTION("Argument should be a buffer object.");
+
+    char * input = Buffer::Data(target);
+    char output[32];
+    
+    uint32_t input_len = Buffer::Length(target);
+
+    if(fast)
+        cryptonight_light_fast_hash(input, output, input_len);
+        else {
+            if (cn_variant > 0 && input_len < 43)
+             return THROW_ERROR_EXCEPTION("Argument must be 43 bytes for monero variant 1+");
+             cryptonight_light_hash(input, output, input_len, cn_variant);
+        }
+
+    v8::Local<v8::Value> returnValue = Nan::CopyBuffer(output, 32).ToLocalChecked();
+    info.GetReturnValue().Set(
+        returnValue
+    );
 }
 
 

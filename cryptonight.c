@@ -23,28 +23,28 @@
 #define INIT_SIZE_BLK   8
 #define INIT_SIZE_BYTE (INIT_SIZE_BLK * AES_BLOCK_SIZE)
 
-#define VARIANT1_1(p) 
-  do if (variant > 0) 
-  { 
-	const uint8_t tmp = ((const uint8_t*)(p))[11]; 
-    static const uint32_t table = 0x75310; 
-    const uint8_t index = (((tmp >> 3) & 6) | (tmp & 1)) << 1; 
-    ((uint8_t*)(p))[11] = tmp ^ ((table >> index) & 0x30); 
-  } while(0)
+#define VARIANT1_1(p) \
+  do if (variant > 0) \
+  { \
+	const uint8_t tmp = ((const uint8_t*)(p))[11]; \
+    static const uint32_t table = 0x75310; \
+    const uint8_t index = (((tmp >> 3) & 6) | (tmp & 1)) << 1; \
+    ((uint8_t*)(p))[11] = tmp ^ ((table >> index) & 0x30); \
+    } while(0) \
 
-#define VARIANT1_2(p) 
-   do if (variant > 0) 
-   { 
-     ((uint64_t*)p)[1] ^= tweak1_2; 
-   } while(0)
+#define VARIANT1_2(p) \
+   do if (variant > 0) \
+   { \
+     ((uint64_t*)p)[1] ^= tweak1_2; \
+    } while(0) \
 
-#define VARIANT1_INIT() 
-  if (variant > 0 && len < 43) 
-  { 
-    fprintf(stderr, "Cryptonight variants need at least 43 bytes of data"); 
-    _exit(1); 
-  } 
-  const uint64_t tweak1_2 = variant > 0 ? *(const uint64_t*)(((const uint8_t*)input)+35) ^ ctx->state.hs.w[24] : 0
+#define VARIANT1_INIT() \
+  if (variant > 0 && len < 43) \
+  { \
+    fprintf(stderr, "Cryptonight variants need at least 43 bytes of data"); \
+    _exit(1); \
+  } \
+  const uint64_t tweak1_2 = variant > 0 ? *(const uint64_t*)(((const uint8_t*)input)+35) ^ ctx->state.hs.w[24] : 0 \
 
 #pragma pack(push, 1)
 union cn_slow_hash_state {
@@ -358,8 +358,9 @@ void cryptonight_hash(const char* input, char* output, uint32_t len, int variant
     uint8_t ExpandedKey[256];
     
     CNKeccak(&ctx->state.hs, input);
+    VARIANT1_INIT();
     
-   memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
+    memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
     memcpy(ExpandedKey, ctx->state.hs.b, AES_KEY_SIZE);
     ExpandAESKey256(ExpandedKey);
     
