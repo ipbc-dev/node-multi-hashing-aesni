@@ -1,7 +1,7 @@
 // Copyright (c) 2012-2013 The Cryptonote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-// Portions Copyright (c) 2018 The Monero developer
+// Portions Copyright (c) 2018 The Monero developers
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,29 +23,6 @@
 #define INIT_SIZE_BLK   8
 #define INIT_SIZE_BYTE (INIT_SIZE_BLK * AES_BLOCK_SIZE)
 
-#define VARIANT1_1(p) \
-  do if (variant > 0) \
-  { \
-	const uint8_t tmp = ((const uint8_t*)(p))[11]; \
-    static const uint32_t table = 0x75310; \
-    const uint8_t index = (((tmp >> 3) & 6) | (tmp & 1)) << 1; \
-    ((uint8_t*)(p))[11] = tmp ^ ((table >> index) & 0x30); \
-    } while(0) \
-
-#define VARIANT1_2(p) \
-   do if (variant > 0) \
-   { \
-     ((uint64_t*)p)[1] ^= tweak1_2; \
-    } while(0) \
-
-#define VARIANT1_INIT() \
-  if (variant > 0 && len < 43) \
-  { \
-    fprintf(stderr, "Cryptonight variants need at least 43 bytes of data"); \
-    _exit(1); \
-  } \
-  const uint64_t tweak1_2 = variant > 0 ? *(const uint64_t*)(((const uint8_t*)input)+35) ^ ctx->state.hs.w[24] : 0 \
-
 #pragma pack(push, 1)
 union cn_slow_hash_state {
     union hash_state hs;
@@ -55,6 +32,29 @@ union cn_slow_hash_state {
     };
 };
 #pragma pack(pop)
+
+#define VARIANT1_1(p) \
+  do if (variant > 0) \
+  { \
+	const uint8_t tmp = ((const uint8_t*)(p))[11]; \
+    static const uint32_t table = 0x75310; \
+    const uint8_t index = (((tmp >> 3) & 6) | (tmp & 1)) << 1; \
+    ((uint8_t*)(p))[11] = tmp ^ ((table >> index) & 0x30); \
+    } while(0) 
+
+#define VARIANT1_2(p) \
+   do if (variant > 0) \
+   { \
+     ((uint64_t*)p)[1] ^= tweak1_2; \
+    } while(0) 
+
+#define VARIANT1_INIT() \
+  if (variant > 0 && len < 43) \
+  { \
+    fprintf(stderr, "Cryptonight variants need at least 43 bytes of data"); \
+    _exit(1); \
+  } \
+  const uint64_t tweak1_2 = variant > 0 ? *(const uint64_t*)(((const uint8_t*)input)+35) ^ ctx->state.hs.w[24] : 0 
 
 static void do_blake_hash(const void* input, size_t len, char* output) {
     blake256_hash((uint8_t*)output, input, len);
