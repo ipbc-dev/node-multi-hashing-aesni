@@ -68,7 +68,6 @@ class CNAsyncWorker : public Nan::AsyncWorker{
         ~CNAsyncWorker() {}
 
     void Execute () {
-        uint32_t cn_variant = 0;
         cryptonight_hash(input, output, input_len, cn_variant);
       }
 
