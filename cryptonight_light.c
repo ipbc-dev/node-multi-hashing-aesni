@@ -439,7 +439,12 @@ void cryptonight_light_hash(const char *input, char *output, uint32_t len, int v
 
         a[0] ^= b[0];
         a[1] ^= b[1];
+        
         VARIANT1_2(dst + 1);
+        if (variant > 2) {
+            *(dst + 1) ^= *dst;
+        }
+
         b_x = c_x;
         __builtin_prefetch(&ctx->long_state[a[0] & 0xFFFF0], 0, 3);
     }
